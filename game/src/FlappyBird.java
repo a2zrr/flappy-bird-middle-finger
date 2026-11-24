@@ -140,6 +140,10 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
             g.drawString(String.valueOf((int) score), 10, 35);
         }
 
+        if (!started && !gameOver) {
+            drawStartMessage(g);
+        }
+
         drawHud(g);
         
         
@@ -248,6 +252,22 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
             handStatus = gestureOn ? HUD_FINGER_UP : HUD_HAND;
         }
         repaint();
+    }
+
+    // Shown on the start screen so it is clear when to raise the finger.
+    void drawStartMessage(Graphics g) {
+        String[] lines = {"Raise your middle finger", "or press SPACE to start"};
+        g.setFont(new Font("Arial", Font.BOLD, 18));
+        FontMetrics fm = g.getFontMetrics();
+        int y = boardHeight / 2 + 80;
+        for (String line : lines) {
+            int x = (boardWidth - fm.stringWidth(line)) / 2;
+            g.setColor(new Color(0, 0, 0, 170));
+            g.drawString(line, x + 2, y + 2);
+            g.setColor(Color.white);
+            g.drawString(line, x, y);
+            y += 28;
+        }
     }
 
     // Small pill in the top-right corner showing what the webcam sees.
