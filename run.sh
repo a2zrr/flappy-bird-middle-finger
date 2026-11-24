@@ -3,9 +3,10 @@
 # starts the webcam tracker in the background and opens the game.
 # When the game closes, the tracker is stopped too.
 #
-#   ./run.sh                  # normal start, with the tracker preview window
-#   ./run.sh --no-preview     # any extra flags go to tracker/tracker.py
+#   ./run.sh                  # play (the camera preview stays hidden)
+#   ./run.sh --preview        # also show the camera preview window
 #   ./run.sh --debug          # print finger ratios, to tune the thresholds
+#   ./run.sh --camera 1       # any other flags go to tracker/tracker.py
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -14,6 +15,22 @@ REQ="$ROOT/tracker/requirements.txt"
 STAMP="$VENV/.requirements.sha256"
 OUT="$ROOT/build/out"
 TRACKER_PID=""
+
+# --preview is handled here; everything else goes to the tracker.
+# The preview window is hidden by default: on Wayland it cannot be placed
+# beside the game, so it would cover it.
+PREVIEW=0
+TRACKER_ARGS=()
+for arg in "$@"; do
+    if [[ "$arg" == "--preview" ]]; then
+        PREVIEW=1
+    else
+        TRACKER_ARGS+=("$arg")
+    fi
+done
+if [[ "$PREVIEW" -eq 0 ]]; then
+    TRACKER_ARGS+=("--no-preview")
+fi
 
 die() {
     echo "ERROR: $*" >&2
@@ -72,7 +89,7 @@ cp "$ROOT"/game/src/*.png "$OUT"/
 #    makes that explicit (see the README troubleshooting section).
 export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-xcb}"
 echo "Starting the webcam tracker ..."
-"$VENV/bin/python" "$ROOT/tracker/tracker.py" "$@" &
+"$VENV/bin/python" "$ROOT/tracker/tracker.py" "${TRACKER_ARGS[@]}" &
 TRACKER_PID=$!
 sleep 1
 if ! kill -0 "$TRACKER_PID" 2>/dev/null; then
