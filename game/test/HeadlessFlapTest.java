@@ -62,6 +62,17 @@ public class HeadlessFlapTest {
         SwingUtilities.invokeAndWait(() -> game.gameLoop.stop());
         check("FLAP restarts after lockout", !onEdt(() -> game.gameOver));
 
+        // 6. STATUS drives the HUD state.
+        send("STATUS hand=1 gesture=1");
+        Thread.sleep(150);
+        check("STATUS hand=1 gesture=1 -> finger UP", onEdt(() -> game.handStatus) == FlappyBird.HUD_FINGER_UP);
+        send("STATUS hand=1 gesture=0");
+        Thread.sleep(150);
+        check("STATUS hand=1 gesture=0 -> hand detected", onEdt(() -> game.handStatus) == FlappyBird.HUD_HAND);
+        send("STATUS hand=0 gesture=0");
+        Thread.sleep(150);
+        check("STATUS hand=0 -> no hand", onEdt(() -> game.handStatus) == FlappyBird.HUD_NO_HAND);
+
         System.out.println(failures == 0 ? "ALL PASSED" : failures + " CHECK(S) FAILED");
         System.exit(failures == 0 ? 0 : 1);
     }
