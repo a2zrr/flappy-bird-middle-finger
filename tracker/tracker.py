@@ -217,7 +217,10 @@ def main(argv=None):
     if not args.no_preview:
         cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_AUTOSIZE)
     print(f"Tracking. Sending to 127.0.0.1:{args.port}. Raise your middle finger!", flush=True)
-    print("Press q or ESC in the preview window (or Ctrl+C) to quit.", flush=True)
+    if args.no_preview:
+        print("Press Ctrl+C to quit.", flush=True)
+    else:
+        print("Press q or ESC in the preview window (or Ctrl+C) to quit.", flush=True)
 
     try:
         while True:
