@@ -58,6 +58,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     Timer placePipeTimer;
     boolean gameOver = false;
     double score = 0;
+    JFrame gameOverFrame; // kept so a restart can close the game-over window
 
     FlappyBird() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
@@ -184,7 +185,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
 
-            velocityY = -9;
+            jump();
            
 
         }
@@ -196,8 +197,32 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     @Override
     public void keyReleased(KeyEvent e) {}
 
+    // One flap: the same action SPACE performs.
+    void jump() {
+        velocityY = -9;
+    }
+
+    // Reset everything and start playing again (used by the Restart button).
+    void restartGame() {
+        bird.x = boardWidth / 8;
+        bird.y = boardHeight / 2;
+        velocityY = 0;
+        pipes.clear();
+        score = 0;
+        gameOver = false;
+
+        gameLoop.start();
+        placePipeTimer.start();
+        if (gameOverFrame != null) {
+            gameOverFrame.dispose();
+            gameOverFrame = null;
+        }
+        repaint();
+        requestFocusInWindow();
+    }
+
     private void showGameOverFrame() {
-        JFrame gameOverFrame = new JFrame("Game Over");
+        gameOverFrame = new JFrame("Game Over");
         gameOverFrame.setSize(300, 200);
         gameOverFrame.setLayout(new BorderLayout());
         gameOverFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -207,20 +232,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         gameOverLabel.setForeground(Color.RED);
     
         JButton restartButton = new JButton("Restart");
-        restartButton.addActionListener(e -> {
-            // Reset the game
-            bird.x = boardWidth / 8;
-            bird.y = boardHeight / 2;
-            velocityY = 0;
-            pipes.clear();
-            score = 0;
-            gameOver = false;
-    
-            gameLoop.start();
-            placePipeTimer.start();
-            gameOverFrame.dispose();
-            repaint(); 
-        });
+        restartButton.addActionListener(e -> restartGame());
     
         gameOverFrame.add(gameOverLabel, BorderLayout.CENTER);
         gameOverFrame.add(restartButton, BorderLayout.SOUTH);
