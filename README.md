@@ -41,10 +41,12 @@
 
 The first run creates `.venv/`, installs the tracker requirements, compiles the game into `build/out/`, starts the tracker in the background and opens the game. Closing the game also stops the tracker.
 
+The game opens on a start screen. **Raise your middle finger (or press SPACE) to start.** The bird doesn't fall until then. The camera preview is hidden by default so it doesn't cover the game. Add `--preview` if you want to see it.
+
 Any extra flags go to the tracker:
 
 ```bash
-./run.sh --no-preview      # no tracker preview window
+./run.sh --preview         # also show the camera preview window (hidden by default)
 ./run.sh --debug           # print finger ratios while you tune
 ./run.sh --camera 1        # use a different camera
 ```
@@ -71,6 +73,7 @@ java -cp build/out App
 | Jump | Raise your **middle finger** (index, ring and pinky folded). Each raise = one jump. |
 | Jump again | Fold the finger back down, then raise it again. Holding it up does nothing. |
 | Jump | **SPACE** still works, exactly as in the original game. |
+| Start | Raise the middle finger, or press SPACE, on the start screen. |
 | Restart after game over | Raise the middle finger again. It is ignored for the first 0.8 s after game over, so the jump that caused the crash doesn't restart the game at once. The **Restart** button still works. SPACE does not restart, as in the original game. |
 | Quit the tracker | `q` or `ESC` in its preview window, or `Ctrl+C` |
 
@@ -106,7 +109,7 @@ All values are also constants at the top of `tracker/gesture.py`.
 **Wayland and the preview window**
 - The OpenCV window runs through XWayland. `run.sh` sets `QT_QPA_PLATFORM=xcb`, because the OpenCV wheels only ship the X11 Qt plugin.
 - If the preview window doesn't appear, check that XWayland is running (`echo $DISPLAY` should print something like `:0`). Some compositors don't provide XWayland by default.
-- You can always play without the preview: `./run.sh --no-preview`. The game works the same, only the tracker window is missing.
+- The preview is hidden by default because a window can't be placed beside the game on Wayland, so it would cover the game. Use `./run.sh --preview` only when you want to see it.
 
 **The game doesn't react**
 - Test the game without the camera: `python3 tools/send_flap.py` should make the bird jump. If it doesn't, the game isn't listening. Check the terminal for `Gesture control: listening on UDP 127.0.0.1:5005`.
