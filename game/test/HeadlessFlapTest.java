@@ -29,10 +29,14 @@ public class HeadlessFlapTest {
         UdpGestureListener listener = new UdpGestureListener(game, PORT);
         listener.start();
 
-        // 1. FLAP makes the bird jump exactly like SPACE does.
+        // 0. The game waits on the start screen until the first flap.
+        check("starts on the start screen", !onEdt(() -> game.started));
+
+        // 1. FLAP makes the bird jump exactly like SPACE does, and starts the game.
         send("FLAP");
         Thread.sleep(200);
         check("FLAP jumps (velocityY == -9)", onEdt(() -> game.velocityY) == -9);
+        check("first FLAP starts the game", onEdt(() -> game.started));
 
         // 2. SPACE still works as before.
         SwingUtilities.invokeAndWait(() -> {
