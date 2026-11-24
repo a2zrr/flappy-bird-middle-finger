@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Java
+*.class
+build/
+
+# Downloaded model (fetched automatically on first run)
+tracker/models/*.task
+tracker/models/*.part
+
+# Editors and OS files
+.idea/
+.vscode/
+*.iml
+.DS_Store

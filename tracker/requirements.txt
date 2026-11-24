@@ -1,0 +1,4 @@
+# Tracker runtime. MediaPipe 0.10.21+ still has the Tasks API used in tracker.py.
+mediapipe>=0.10.21,<2
+opencv-python>=4.10
+pytest>=8
