@@ -3,8 +3,8 @@
 # starts the webcam tracker in the background and opens the game.
 # When the game closes, the tracker is stopped too.
 #
-#   ./run.sh                  # play (the camera preview stays hidden)
-#   ./run.sh --preview        # also show the camera preview window
+#   ./run.sh                  # play (the webcam image is shown beside the board)
+#   ./run.sh --preview        # also open a separate OpenCV preview window
 #   ./run.sh --debug          # print finger ratios, to tune the thresholds
 #   ./run.sh --camera 1       # any other flags go to tracker/tracker.py
 set -euo pipefail
@@ -17,8 +17,8 @@ OUT="$ROOT/build/out"
 TRACKER_PID=""
 
 # --preview is handled here; everything else goes to the tracker.
-# The preview window is hidden by default: on Wayland it cannot be placed
-# beside the game, so it would cover it.
+# The separate OpenCV window stays off by default. The game shows the camera
+# beside the board itself, so that window is not needed.
 PREVIEW=0
 TRACKER_ARGS=()
 for arg in "$@"; do

@@ -41,12 +41,13 @@
 
 The first run creates `.venv/`, installs the tracker requirements, compiles the game into `build/out/`, starts the tracker in the background and opens the game. Closing the game also stops the tracker.
 
-The game opens on a start screen. **Raise your middle finger (or press SPACE) to start.** The bird doesn't fall until then. The camera preview is hidden by default so it doesn't cover the game. Add `--preview` if you want to see it.
+The game opens on a start screen. **Raise your middle finger (or press SPACE) to start.** The bird doesn't fall until then. Your webcam image is shown in a panel right beside the board, with the hand skeleton drawn on it.
 
 Any extra flags go to the tracker:
 
 ```bash
-./run.sh --preview         # also show the camera preview window (hidden by default)
+./run.sh --preview         # also open a separate OpenCV preview window
+./run.sh --preview         # also open a separate OpenCV preview window
 ./run.sh --debug           # print finger ratios while you tune
 ./run.sh --camera 1        # use a different camera
 ```

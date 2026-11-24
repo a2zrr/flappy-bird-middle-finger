@@ -55,6 +55,10 @@ FRAME_W, FRAME_H = 640, 480
 STATUS_PERIOD_S = 0.1   # STATUS messages per second: 10
 FLASH_S = 0.5           # how long the "FLAP!" text stays on screen
 WINDOW_NAME = "Flappy Bird: middle finger"
+FEED_PORT = 5006        # the game's camera panel listens here (127.0.0.1 only)
+FEED_W, FEED_H = 320, 240
+FEED_PERIOD_S = 0.1     # camera frames sent to the game per second: 10
+FEED_JPEG_QUALITY = 60  # small datagrams; well under the UDP limit
 
 # Bones for drawing the hand (MediaPipe's standard 21-landmark skeleton).
 HAND_BONES = [
@@ -157,7 +161,11 @@ def parse_args(argv):
     p.add_argument("--camera", default="0",
                    help="camera index (default 0). A video file path also works, for testing.")
     p.add_argument("--port", type=int, default=5005, help="UDP port of the game (default 5005)")
-    p.add_argument("--no-preview", action="store_true", help="do not open the preview window")
+    p.add_argument("--no-preview", action="store_true", help="do not open the separate preview window")
+    p.add_argument("--no-feed", action="store_true",
+                   help="do not send the camera image to the game (it is shown beside the board by default)")
+    p.add_argument("--feed-port", type=int, default=FEED_PORT,
+                   help=f"UDP port of the game's camera panel (default {FEED_PORT})")
     p.add_argument("--extend-ratio", type=float, default=EXTEND_RATIO,
                    help=f"finger is extended when tip/pip distance ratio > this (default {EXTEND_RATIO})")
     p.add_argument("--fold-ratio", type=float, default=FOLD_RATIO,
@@ -201,6 +209,10 @@ def main(argv=None):
             sock.sendto(message, target)
         except OSError:
             pass  # the game is not running yet, or was closed: nothing to do
+
+    feed_sock = None if args.no_feed else socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    feed_target = ("127.0.0.1", args.feed_port)
+    last_feed = 0.0
 
     detectors = {}           # one detector per hand label ("Left"/"Right")
     start = time.monotonic()
@@ -280,10 +292,23 @@ def main(argv=None):
             fps = 0.9 * fps + 0.1 / max(now - last_frame, 1e-6) if frames > 1 else 0.0
             last_frame = now
 
-            if not args.no_preview:
+            if not args.no_preview or feed_sock is not None:
                 for landmarks in hands.values():
                     draw_hand(frame, landmarks, gesture_on)
                 draw_hud(frame, gesture_on, bool(hands), fps, now < flash_until)
+
+            # The game shows this feed beside the board (JPEG over UDP, about 10 per second).
+            if feed_sock is not None and now - last_feed >= FEED_PERIOD_S:
+                last_feed = now
+                small = cv2.resize(frame, (FEED_W, FEED_H))
+                ok_jpg, jpg = cv2.imencode(".jpg", small, [cv2.IMWRITE_JPEG_QUALITY, FEED_JPEG_QUALITY])
+                if ok_jpg:
+                    try:
+                        feed_sock.sendto(jpg.tobytes(), feed_target)
+                    except OSError:
+                        pass  # the game is not running, or the datagram is too large
+
+            if not args.no_preview:
                 cv2.imshow(WINDOW_NAME, frame)
                 key = cv2.waitKey(1) & 0xFF
                 if key in (ord("q"), 27):
@@ -296,6 +321,8 @@ def main(argv=None):
         cap.release()
         landmarker.close()
         sock.close()
+        if feed_sock is not None:
+            feed_sock.close()
         if not args.no_preview:
             cv2.destroyAllWindows()
     print(f"Stopped. {flaps} flap(s) sent.", flush=True)

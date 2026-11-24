@@ -169,6 +169,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
                 gameOver = true;
             }
         }
+        pipes.removeIf(p -> p.x + p.width < 0); // off the left edge: forget it
 
         if (bird.y > boardHeight) {
             gameOver = true;
