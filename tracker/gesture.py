@@ -35,7 +35,8 @@ FINGERS = {"index": INDEX, "middle": MIDDLE, "ring": RING, "pinky": PINKY}
 # Tunable thresholds. tracker.py exposes the important ones as CLI flags.
 EXTEND_RATIO = 1.15      # tip this much farther from the wrist than the PIP => extended
 FOLD_RATIO = 1.00        # tip closer to the wrist than the PIP by this factor => folded
-ON_FRAMES = 2            # matching frames in a row before the gesture turns ON
+MIDDLE_LEAD = 0.20       # other fingers may read above FOLD_RATIO if the middle is this much longer
+ON_FRAMES = 1            # matching frames in a row before the gesture turns ON (the camera runs ~8 fps here)
 OFF_FRAMES = 2           # non-matching frames in a row before it turns OFF
 MIN_FLAP_GAP_S = 0.120   # minimum time between two FLAPs, in seconds
 
@@ -83,18 +84,28 @@ def finger_ratios(points, aspect=1.0):
     return {name: finger_ratio(points, f, aspect) for name, f in FINGERS.items()}
 
 
-def pattern_matches(points, extend_ratio=EXTEND_RATIO, fold_ratio=FOLD_RATIO, aspect=1.0):
-    """True when this single frame shows middle up and index, ring and pinky folded."""
+def pattern_matches(points, extend_ratio=EXTEND_RATIO, fold_ratio=FOLD_RATIO, aspect=1.0,
+                    lead=MIDDLE_LEAD):
+    """True when this single frame shows middle up and index, ring and pinky down.
+
+    A finger counts as down when it is FOLDED, or when the middle finger is clearly
+    longer than it (at least `lead` in ratio). The second rule matters because a
+    relaxed folded finger can read above fold_ratio on some hands.
+    """
     if points is None or len(points) < 21:
         return False
     if _dist(points[WRIST], points[MIDDLE[0]], aspect) <= 1e-9:  # no palm, bad detection
         return False
-    if classify_finger(points, MIDDLE, extend_ratio, fold_ratio, aspect) != EXTENDED:
+    middle = finger_ratio(points, MIDDLE, aspect)
+    if middle is None or middle <= extend_ratio:
         return False
-    return all(
-        classify_finger(points, FINGERS[name], extend_ratio, fold_ratio, aspect) == FOLDED
-        for name in ("index", "ring", "pinky")
-    )
+    for name in ("index", "ring", "pinky"):
+        other = finger_ratio(points, FINGERS[name], aspect)
+        if other is None:
+            return False
+        if other >= fold_ratio and middle - other < lead:
+            return False
+    return True
 
 
 class MiddleFingerDetector:

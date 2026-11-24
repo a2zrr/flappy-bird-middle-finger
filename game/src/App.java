@@ -12,7 +12,10 @@ public class App {
         FlappyBird flappyBird = new FlappyBird();
         CameraFeedListener.CameraPanel camera = new CameraFeedListener.CameraPanel(320, 240);
         frame.add(flappyBird, BorderLayout.CENTER);
-        frame.add(camera, BorderLayout.EAST);
+        // Wrapper keeps the camera at its own small size, at the top of the right side.
+        JPanel side = new JPanel(new BorderLayout());
+        side.add(camera, BorderLayout.NORTH);
+        frame.add(side, BorderLayout.EAST);
 
         new UdpGestureListener(flappyBird, UdpGestureListener.DEFAULT_PORT).start();
         new CameraFeedListener(CameraFeedListener.DEFAULT_PORT, camera::setFrame).start();

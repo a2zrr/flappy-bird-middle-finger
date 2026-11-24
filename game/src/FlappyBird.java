@@ -50,6 +50,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     int velocityX = -4; 
     int velocityY = 0; 
     int gravity = 1;
+    static final int MAX_FALL_SPEED = 6; // pixels per frame
 
     ArrayList<Pipe> pipes;
     
@@ -151,7 +152,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
 
     public void move() {
         //bird
-        velocityY += gravity;
+        velocityY = Math.min(velocityY + gravity, MAX_FALL_SPEED); // capped, so a fall is not instant
         bird.y += velocityY;
         bird.y = Math.max(bird.y, 0);
 

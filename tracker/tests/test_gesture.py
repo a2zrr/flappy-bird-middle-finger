@@ -117,7 +117,7 @@ def test_aspect_ratio_does_not_break_detection():
 def test_middle_finger_up_turns_gesture_on():
     det = MiddleFingerDetector()
     states, _, _ = run(det, [make_hand(UP)] * 3)
-    assert states == [False, True, True]
+    assert states == [True, True, True]  # one matching frame is enough to turn ON
 
 
 def test_open_hand_stays_off():
@@ -155,12 +155,13 @@ def test_one_noisy_frame_while_holding_does_not_flap_or_drop():
     assert all(states[1:])  # the gesture stays ON through the noisy frame
 
 
-def test_one_noisy_frame_alone_does_not_flap():
+def test_one_frame_of_middle_up_is_enough_to_flap():
+    # Trade-off for the slow camera: a single false UP frame can flap.
     det = MiddleFingerDetector()
     frames = [make_hand(FIST)] * 5 + [make_hand(UP)] + [make_hand(FIST)] * 5
     states, flaps, _ = run(det, frames)
-    assert flaps == 0
-    assert not any(states)
+    assert flaps == 1
+    assert states[5] is True
 
 
 def test_hand_lost_resets_to_off():
@@ -177,16 +178,14 @@ def test_hand_lost_then_back_up_flaps_again():
     det.update(None, 1.0)
     _, flap = det.update(make_hand(UP), 2.0)
     assert flaps == 1
-    assert flap is False  # first matching frame only: needs ON_FRAMES in a row
-    _, flap = det.update(make_hand(UP), 2.1)
-    assert flap is True
+    assert flap is True  # ON_FRAMES == 1: the first matching frame flaps
 
 
-def test_flap_needs_two_matching_frames_in_a_row():
+def test_flap_fires_on_first_matching_frame():
     det = MiddleFingerDetector()
     states, flaps, flap_frames = run(det, [make_hand(UP)] * 2)
     assert flaps == 1
-    assert flap_frames == [1]
+    assert flap_frames == [0]
 
 
 def test_gesture_turns_off_after_two_non_matching_frames():
@@ -228,3 +227,22 @@ def test_thresholds_can_be_tuned():
     det = MiddleFingerDetector(extend_ratio=2.0)
     _, flaps, _ = run(det, [make_hand(UP)] * 10)
     assert flaps == 0
+
+
+def _stub_ratios(monkeypatch, ratios):
+    """Replace finger_ratio with fixed values: ratios maps finger name -> ratio."""
+    import gesture
+    names = {id(finger): name for name, finger in gesture.FINGERS.items()}
+    monkeypatch.setattr(gesture, "finger_ratio",
+                        lambda points, finger, aspect=1.0: ratios[names[id(finger)]])
+
+
+def test_middle_up_matches_when_other_fingers_read_above_fold(monkeypatch):
+    # Real hands: the others can sit at 1.05 while the middle is clearly longer.
+    _stub_ratios(monkeypatch, {"middle": 1.35, "index": 1.05, "ring": 1.02, "pinky": 1.04})
+    assert pattern_matches(make_hand(UP))
+
+
+def test_open_hand_with_similar_lengths_does_not_match(monkeypatch):
+    _stub_ratios(monkeypatch, {"middle": 1.25, "index": 1.22, "ring": 1.20, "pinky": 1.18})
+    assert not pattern_matches(make_hand(OPEN))
