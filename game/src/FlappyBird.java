@@ -66,6 +66,9 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     static final int HUD_HIDDEN = -1, HUD_NO_HAND = 0, HUD_HAND = 1, HUD_FINGER_UP = 2;
     int handStatus = HUD_HIDDEN;
 
+    // The bird waits until the first flap (SPACE or middle finger) starts the game.
+    boolean started = false;
+
     FlappyBird() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
 
@@ -90,7 +93,6 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
               placePipes();
             }
         });
-        placePipeTimer.start();
         
 
 		gameLoop = new Timer(1000/60, this); 
@@ -180,6 +182,10 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     @Override
     public void actionPerformed(ActionEvent e) { 
        
+        if (!started) {
+            repaint();
+            return;
+        }
         move();
         repaint();
         if (gameOver) {
@@ -208,6 +214,10 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
 
     // One flap: the same action SPACE performs.
     void jump() {
+        if (!started) {
+            started = true;
+            placePipeTimer.start();
+        }
         velocityY = -9;
     }
 
@@ -220,8 +230,8 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         score = 0;
         gameOver = false;
 
+        started = false; // back to the start screen; the next flap plays
         gameLoop.start();
-        placePipeTimer.start();
         if (gameOverFrame != null) {
             gameOverFrame.dispose();
             gameOverFrame = null;
