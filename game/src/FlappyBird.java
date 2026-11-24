@@ -62,6 +62,10 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     long gameOverAt = 0; // when the game ended (ms), used by the FLAP lockout
     static final int GAME_OVER_FLAP_LOCKOUT_MS = 800;
 
+    // Corner HUD fed by the tracker's STATUS messages. HUD_HIDDEN until one arrives.
+    static final int HUD_HIDDEN = -1, HUD_NO_HAND = 0, HUD_HAND = 1, HUD_FINGER_UP = 2;
+    int handStatus = HUD_HIDDEN;
+
     FlappyBird() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
 
@@ -133,6 +137,8 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         if (!gameOver) {
             g.drawString(String.valueOf((int) score), 10, 35);
         }
+
+        drawHud(g);
         
         
 	}
@@ -222,6 +228,48 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         }
         repaint();
         requestFocusInWindow();
+    }
+
+    // Called on the Swing thread with the tracker's STATUS message.
+    void setHandStatus(boolean handPresent, boolean gestureOn) {
+        if (!handPresent) {
+            handStatus = HUD_NO_HAND;
+        } else {
+            handStatus = gestureOn ? HUD_FINGER_UP : HUD_HAND;
+        }
+        repaint();
+    }
+
+    // Small pill in the top-right corner showing what the webcam sees.
+    void drawHud(Graphics g) {
+        String text;
+        Color dot;
+        switch (handStatus) {
+            case HUD_NO_HAND:
+                text = "no hand";
+                dot = new Color(150, 150, 150);
+                break;
+            case HUD_HAND:
+                text = "hand detected";
+                dot = new Color(255, 200, 0);
+                break;
+            case HUD_FINGER_UP:
+                text = "finger UP";
+                dot = new Color(80, 220, 90);
+                break;
+            default:
+                return; // no tracker connected: nothing to show
+        }
+        g.setFont(new Font("Arial", Font.BOLD, 13));
+        int width = g.getFontMetrics().stringWidth(text) + 30;
+        int x = boardWidth - width - 10;
+        int y = 10;
+        g.setColor(new Color(0, 0, 0, 150));
+        g.fillRoundRect(x, y, width, 24, 12, 12);
+        g.setColor(dot);
+        g.fillOval(x + 9, y + 8, 8, 8);
+        g.setColor(Color.white);
+        g.drawString(text, x + 22, y + 17);
     }
 
     // A FLAP from the webcam: jump, or restart if the game is over.

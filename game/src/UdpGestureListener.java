@@ -9,7 +9,8 @@ import javax.swing.SwingUtilities;
 /**
  * Receives UDP messages from the webcam tracker (tracker/tracker.py).
  *
- *   FLAP  -> does exactly what SPACE does (and restarts after game over)
+ *   FLAP                         -> does exactly what SPACE does (and restarts after game over)
+ *   STATUS hand=0|1 gesture=0|1  -> updates the corner HUD (no hand / hand / finger UP)
  *
  * The socket is bound to 127.0.0.1 only and read on a daemon thread. Every
  * call into the game is moved to the Swing thread. If the port is already in
@@ -66,6 +67,29 @@ public class UdpGestureListener {
     private void handle(String message) {
         if (message.equals("FLAP")) {
             SwingUtilities.invokeLater(game::handleFlap);
+        } else if (message.startsWith("STATUS")) {
+            int hand = intField(message, "hand");
+            int gesture = intField(message, "gesture");
+            if (hand < 0 || gesture < 0) {
+                return;
+            }
+            final boolean handPresent = hand == 1;
+            final boolean gestureOn = gesture == 1;
+            SwingUtilities.invokeLater(() -> game.setHandStatus(handPresent, gestureOn));
         }
+    }
+
+    // Reads "key=<int>" from a message such as "STATUS hand=1 gesture=0". Returns -1 if missing.
+    static int intField(String message, String key) {
+        for (String part : message.split("\\s+")) {
+            if (part.startsWith(key + "=")) {
+                try {
+                    return Integer.parseInt(part.substring(key.length() + 1));
+                } catch (NumberFormatException e) {
+                    return -1;
+                }
+            }
+        }
+        return -1;
     }
 }
