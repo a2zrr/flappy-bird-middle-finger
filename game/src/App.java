@@ -12,6 +12,7 @@ public class App {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         FlappyBird flappyBird = new FlappyBird();
+        new UdpGestureListener(flappyBird, UdpGestureListener.DEFAULT_PORT).start();
         frame.add(flappyBird);
         frame.pack();
         flappyBird.requestFocus();

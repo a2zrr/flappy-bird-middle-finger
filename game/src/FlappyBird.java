@@ -59,6 +59,8 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
     boolean gameOver = false;
     double score = 0;
     JFrame gameOverFrame; // kept so a restart can close the game-over window
+    long gameOverAt = 0; // when the game ended (ms), used by the FLAP lockout
+    static final int GAME_OVER_FLAP_LOCKOUT_MS = 800;
 
     FlappyBird() {
         setPreferredSize(new Dimension(boardWidth, boardHeight));
@@ -175,6 +177,7 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         move();
         repaint();
         if (gameOver) {
+            gameOverAt = System.currentTimeMillis();
             placePipeTimer.stop();
             gameLoop.stop();
             showGameOverFrame();
@@ -219,6 +222,19 @@ public class FlappyBird extends JPanel implements ActionListener, KeyListener {
         }
         repaint();
         requestFocusInWindow();
+    }
+
+    // A FLAP from the webcam: jump, or restart if the game is over.
+    void handleFlap() {
+        if (gameOver) {
+            // Ignore the flap that may have ended the game so it can't restart it instantly.
+            if (System.currentTimeMillis() - gameOverAt < GAME_OVER_FLAP_LOCKOUT_MS) {
+                return;
+            }
+            restartGame();
+        } else {
+            jump();
+        }
     }
 
     private void showGameOverFrame() {
