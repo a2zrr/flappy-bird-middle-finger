@@ -11,11 +11,11 @@
  │  Webcam  │ ─────────► │ MediaPipe Hand         │ ───────────────► │ gesture.py           │
  │ (OpenCV) │            │ Landmarker (per frame) │                  │ middle up, others    │
  └──────────┘            └────────────────────────┘                  │ folded? debounce,    │
-                                                                      │ rising edge → FLAP   │
-                                                                      └──────────┬───────────┘
-                                                                                 │ UDP 127.0.0.1:5005
-                                                                                 │ "FLAP" / "STATUS …"
-                                                                                 ▼
+                                                                     │ rising edge → FLAP   │
+                                                                     └──────────┬───────────┘
+                                                                                │ UDP 127.0.0.1:5005
+                                                                                │ "FLAP" / "STATUS …"
+                                                                                ▼
                                                                       ┌──────────────────────┐
                                                                       │ Java Swing game      │
                                                                       │ FLAP = SPACE jump,   │
