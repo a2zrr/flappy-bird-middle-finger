@@ -2,7 +2,6 @@
 
 **Flip off gravity. Literally.** The bird flies when you raise your middle finger at your webcam. Gravity has never been so offended.
 
-> 🎞️ *GIF placeholder: record a short clip of a few jumps and save it as `docs/demo.gif`.*
 
 ## How it works
 
